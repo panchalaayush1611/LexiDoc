@@ -34,11 +34,20 @@ function openPDFDB() {
 export async function savePdfBlobToDB(documentId, fileOrBlob) {
   if (!documentId || !fileOrBlob) return
   try {
+    const arrayBuffer = await fileOrBlob.arrayBuffer()
+    const type = fileOrBlob.type || 'application/pdf'
+    const name = fileOrBlob.name || 'document.pdf'
+    const record = {
+      buffer: arrayBuffer,
+      type,
+      name,
+      updatedAt: Date.now(),
+    }
     const db = await openPDFDB()
     if (!db) return
     const tx = db.transaction(STORE_NAME, 'readwrite')
     const store = tx.objectStore(STORE_NAME)
-    store.put(fileOrBlob, documentId)
+    store.put(record, documentId)
     await new Promise((resolve) => {
       tx.oncomplete = resolve
       tx.onerror = resolve
@@ -56,10 +65,18 @@ export async function getPdfBlobFromDB(documentId) {
     const tx = db.transaction(STORE_NAME, 'readonly')
     const store = tx.objectStore(STORE_NAME)
     const req = store.get(documentId)
-    return await new Promise((resolve) => {
+    const result = await new Promise((resolve) => {
       req.onsuccess = () => resolve(req.result || null)
       req.onerror = () => resolve(null)
     })
+    if (!result) return null
+    if (result instanceof Blob) {
+      return result
+    }
+    if (result.buffer) {
+      return new File([result.buffer], result.name || 'document.pdf', { type: result.type || 'application/pdf' })
+    }
+    return null
   } catch (err) {
     console.error('Failed to get PDF blob from IndexedDB:', err)
     return null
