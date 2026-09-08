@@ -18,7 +18,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors duration-300">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#F8FAFC] dark:bg-[#090D16] text-[#0F172A] dark:text-[#F8FAFC] transition-colors duration-300">
       <Navbar />
       <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <Routes>

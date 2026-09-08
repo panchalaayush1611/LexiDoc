@@ -22,7 +22,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md transition-colors duration-300">
+    <header className="sticky top-0 z-40 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-[#090D16]/90 backdrop-blur-md transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <NavLink to="/" className="flex items-center gap-3 group focus-ring rounded-xl p-1" aria-label="LexiDoc home">
@@ -95,7 +95,7 @@ export default function Navbar() {
 
 
       {/* Primary Mobile Navigation Links */}
-      <nav className="md:hidden flex items-center justify-around border-t border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95" aria-label="Primary mobile navigation">
+      <nav className="md:hidden flex items-center justify-around border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#090D16]/95" aria-label="Primary mobile navigation">
         {links.map((l) => (
           <NavLink
             key={l.to}

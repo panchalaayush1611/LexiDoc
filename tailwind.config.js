@@ -4,38 +4,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        indigo: {
-          50: '#21FA901A',
-          100: '#21FA9033',
-          200: '#21FA904D',
-          300: '#21FA9080',
-          400: '#21FA90',
-          500: '#21FA90', // User's requested neon accent
-          600: '#21FA90',
-          700: '#1BC974',
-          800: '#159656',
-          900: '#0F643A',
-          950: '#093A22',
+        brand: {
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81',
         },
-        slate: {
-          50: '#FFFFFF', // User's light mode background
-          100: '#F8F9FA', 
-          200: '#E9ECEF',
-          300: '#DEE2E6',
-          400: '#CED4DA',
-          500: '#ADB5BD',
-          600: '#6C757D',
-          700: '#495057',
-          800: '#4a4e5a', // Darker gray for cards
-          900: '#424651', // User's requested dark bg
-          950: '#383b45', // Even darker gray
+        emeraldAcc: {
+          DEFAULT: '#10B981',
+          light: '#34D399',
+          dark: '#059669',
         },
         surface: {
           light: '#FFFFFF',
           lightSub: '#F8FAFC',
-          dark: '#424651',
-          darkCard: '#383b45',
-          darkBorder: '#4a4e5a',
+          dark: '#0B0F19',
+          darkCard: '#1E293B',
+          darkBorder: '#334155',
         },
       },
       fontFamily: {
