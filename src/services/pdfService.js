@@ -9,14 +9,97 @@ const SETTINGS_KEY = 'pdf-chat-settings'
 // In-memory cache for raw PDF file objects during the browser session
 const activeFileMap = new Map()
 
+const DB_NAME = 'LexiDocPDFStore'
+const DB_VERSION = 1
+const STORE_NAME = 'pdf_files'
+
+function openPDFDB() {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      resolve(null)
+      return
+    }
+    const request = window.indexedDB.open(DB_NAME, DB_VERSION)
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME)
+      }
+    }
+    request.onsuccess = (e) => resolve(e.target.result)
+    request.onerror = () => resolve(null)
+  })
+}
+
+export async function savePdfBlobToDB(documentId, fileOrBlob) {
+  if (!documentId || !fileOrBlob) return
+  try {
+    const db = await openPDFDB()
+    if (!db) return
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    store.put(fileOrBlob, documentId)
+    await new Promise((resolve) => {
+      tx.oncomplete = resolve
+      tx.onerror = resolve
+    })
+  } catch (err) {
+    console.error('Failed to save PDF blob to IndexedDB:', err)
+  }
+}
+
+export async function getPdfBlobFromDB(documentId) {
+  if (!documentId) return null
+  try {
+    const db = await openPDFDB()
+    if (!db) return null
+    const tx = db.transaction(STORE_NAME, 'readonly')
+    const store = tx.objectStore(STORE_NAME)
+    const req = store.get(documentId)
+    return await new Promise((resolve) => {
+      req.onsuccess = () => resolve(req.result || null)
+      req.onerror = () => resolve(null)
+    })
+  } catch (err) {
+    console.error('Failed to get PDF blob from IndexedDB:', err)
+    return null
+  }
+}
+
+export async function deletePdfBlobFromDB(documentId) {
+  if (!documentId) return
+  try {
+    const db = await openPDFDB()
+    if (!db) return
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    store.delete(documentId)
+  } catch (err) {
+    console.error('Failed to delete PDF blob from IndexedDB:', err)
+  }
+}
+
 export function cachePdfFile(documentId, file) {
   if (documentId && file) {
     activeFileMap.set(documentId, file)
+    savePdfBlobToDB(documentId, file)
   }
 }
 
 export function getCachedPdfFile(documentId) {
   return activeFileMap.get(documentId) || null
+}
+
+export async function getCachedPdfFileAsync(documentId) {
+  if (!documentId) return null
+  if (activeFileMap.has(documentId)) {
+    return activeFileMap.get(documentId)
+  }
+  const blob = await getPdfBlobFromDB(documentId)
+  if (blob) {
+    activeFileMap.set(documentId, blob)
+  }
+  return blob
 }
 
 export function loadConversations() {

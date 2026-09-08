@@ -6,6 +6,7 @@ import {
   clearAllConversations,
   cachePdfFile,
   getCachedPdfFile,
+  getCachedPdfFileAsync,
 } from '../services/pdfService.js'
 import { generateId } from '../utils/helpers.js'
 
@@ -183,18 +184,43 @@ export function AppProvider({ children }) {
     setIsThinking(false)
   }, [])
 
-  const loadConversation = useCallback((conv) => {
+  const loadConversation = useCallback(async (conv) => {
+    if (!conv) return
     const cachedFile = getCachedPdfFile(conv.documentId)
-    setCurrentPDFState({
-      id: conv.documentId,
-      name: conv.pdfName,
-      pages: conv.pages,
-      processed: true,
-      file: cachedFile,
-    })
     setConversationId(conv.id)
     setMessages(conv.messages || [])
     setSelectedPage(1)
+
+    if (cachedFile) {
+      setCurrentPDFState({
+        id: conv.documentId,
+        name: conv.pdfName,
+        pages: conv.pages,
+        processed: true,
+        file: cachedFile,
+        isLoadingFile: false,
+      })
+    } else {
+      setCurrentPDFState({
+        id: conv.documentId,
+        name: conv.pdfName,
+        pages: conv.pages,
+        processed: true,
+        file: null,
+        isLoadingFile: true,
+      })
+      const storedFile = await getCachedPdfFileAsync(conv.documentId)
+      setCurrentPDFState((prev) => {
+        if (prev?.id === conv.documentId) {
+          return {
+            ...prev,
+            file: storedFile || null,
+            isLoadingFile: false,
+          }
+        }
+        return prev
+      })
+    }
   }, [])
 
   const removeConversation = useCallback((id) => {

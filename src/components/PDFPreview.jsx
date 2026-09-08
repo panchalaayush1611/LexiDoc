@@ -76,6 +76,11 @@ export default function PDFPreview() {
               className="rounded-2xl overflow-hidden max-w-full border border-slate-200 dark:border-slate-800"
             />
           </Document>
+        ) : currentPDF?.isLoadingFile ? (
+          <div className="flex flex-col items-center justify-center my-auto py-16 gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Restoring PDF document…</p>
+          </div>
         ) : (
           <div className="my-auto w-full max-w-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-7 text-center">
             <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 grid place-items-center mx-auto mb-4 font-bold">
