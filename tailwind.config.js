@@ -42,12 +42,17 @@ export default {
         slideUp: { '0%': { opacity: 0, transform: 'translateY(12px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
         slideDown: { '0%': { opacity: 0, transform: 'translateY(-12px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
         bounceDot: { '0%, 80%, 100%': { transform: 'scale(0.6)', opacity: 0.4 }, '40%': { transform: 'scale(1)', opacity: 1 } },
+        soundWave: {
+          '0%, 100%': { transform: 'scaleY(0.4)' },
+          '50%': { transform: 'scaleY(1)' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         slideUp: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         slideDown: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         bounceDot: 'bounceDot 1.4s infinite ease-in-out',
+        soundWave: 'soundWave 0.8s infinite ease-in-out',
       },
     },
   },

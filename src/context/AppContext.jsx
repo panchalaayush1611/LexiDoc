@@ -53,7 +53,8 @@ export function AppProvider({ children }) {
         const parsed = JSON.parse(stored)
         return {
           ...parsed,
-          avatar: computeAvatar(parsed.name, parsed.email),
+          profilePicture: parsed.profilePicture || null,
+          avatar: parsed.profilePicture || computeAvatar(parsed.name, parsed.email),
         }
       }
       return null
@@ -68,6 +69,7 @@ export function AppProvider({ children }) {
     const fakeUser = {
       name,
       email: userEmail,
+      profilePicture: null,
       avatar: computeAvatar(name, userEmail),
       role: 'Pro Member',
       joinedDate: 'September 2026',
@@ -83,6 +85,7 @@ export function AppProvider({ children }) {
     const fakeUser = {
       name: userName,
       email: userEmail,
+      profilePicture: null,
       avatar: computeAvatar(userName, userEmail),
       role: 'Pro Member',
       joinedDate: 'September 2026',
@@ -96,12 +99,14 @@ export function AppProvider({ children }) {
     setUser((prev) => {
       const name = updatedFields.name !== undefined ? updatedFields.name : prev?.name
       const email = updatedFields.email !== undefined ? updatedFields.email : prev?.email
-      const avatar = computeAvatar(name, email)
+      const profilePicture = updatedFields.profilePicture !== undefined ? updatedFields.profilePicture : (prev?.profilePicture || null)
+      const avatar = profilePicture || computeAvatar(name, email)
       const updated = {
         ...prev,
         ...updatedFields,
         name,
         email,
+        profilePicture,
         avatar,
       }
       localStorage.setItem('lexidoc_user', JSON.stringify(updated))

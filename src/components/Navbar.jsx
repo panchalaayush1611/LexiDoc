@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { FileText, Sparkles, ArrowRight, Settings, User, LogIn } from 'lucide-react'
+import { Sparkles, ArrowRight, Settings, User, LogIn } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 
 const links = [
@@ -26,9 +26,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <NavLink to="/" className="flex items-center gap-3 group focus-ring rounded-xl p-1" aria-label="LexiDoc home">
-          <span className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold transition-transform group-hover:scale-105">
-            <FileText size={20} strokeWidth={2.2} />
-          </span>
+          <img
+            src="/logo.png"
+            alt="LexiDoc Logo"
+            className="w-10 h-10 object-contain transition-transform duration-200 group-hover:scale-105"
+          />
           <div className="flex items-center gap-2">
             <span className="font-display text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               LexiDoc
@@ -65,10 +67,18 @@ export default function Navbar() {
             <button
               onClick={() => setIsSettingsOpen(true)}
               title="Click to manage profile & settings"
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus-ring cursor-pointer"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus-ring cursor-pointer"
             >
-              <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-                {user.avatar || 'U'}
+              <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                {user.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={user.name || 'User'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user.avatar || 'U'
+                )}
               </div>
               <span className="hidden sm:inline text-xs font-semibold max-w-[120px] truncate">{user.name}</span>
             </button>

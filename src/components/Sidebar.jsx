@@ -38,9 +38,11 @@ export default function Sidebar({ onUploadClick, onNewChat, className = '', onCl
       {/* Header Bar */}
       <div className="flex items-center justify-between px-5 h-16 border-b border-slate-200 dark:border-slate-800 shrink-0">
         <div className="flex items-center gap-3">
-          <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white grid place-items-center font-bold">
-            <FileText size={18} strokeWidth={2.2} />
-          </span>
+          <img
+            src="/logo.png"
+            alt="LexiDoc Logo"
+            className="w-9 h-9 object-contain"
+          />
           <span className="font-display text-lg font-extrabold text-slate-900 dark:text-white">LexiDoc</span>
         </div>
         {onClose && (

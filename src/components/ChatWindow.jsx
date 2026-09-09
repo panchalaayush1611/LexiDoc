@@ -16,6 +16,20 @@ export default function ChatWindow({ onOpenUpload }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, isThinking])
 
+  // Cancel any active speech when this component unmounts (navigation away)
+  // or when messages become empty (clearChat)
+  useEffect(() => {
+    if (messages.length === 0) {
+      window.speechSynthesis?.cancel()
+    }
+  }, [messages.length])
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel()
+    }
+  }, [])
+
   const isReady = currentPDF?.processed
 
   return (

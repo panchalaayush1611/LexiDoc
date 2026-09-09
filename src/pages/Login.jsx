@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Sparkles, ArrowRight, Lock, Mail, User, CheckCircle2 } from 'lucide-react'
+import { Sparkles, ArrowRight, Lock, Mail, User, CheckCircle2 } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 
 export default function Login() {
@@ -37,9 +37,11 @@ export default function Login() {
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl animate-fadeIn">
         {/* Brand Logo */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white grid place-items-center mx-auto mb-4 font-bold shadow-md">
-            <FileText size={28} />
-          </div>
+          <img
+            src="/logo.png"
+            alt="LexiDoc Logo"
+            className="w-20 h-20 mx-auto mb-4 object-contain drop-shadow-lg"
+          />
           <h1 className="font-display text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
             {isSignUp ? 'Create your LexiDoc Account' : 'Welcome back to LexiDoc'}
           </h1>

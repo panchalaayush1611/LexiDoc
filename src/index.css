@@ -59,5 +59,21 @@ html.dark ::-webkit-scrollbar-thumb, body.dark ::-webkit-scrollbar-thumb {
   border: 1px solid rgba(51, 65, 85, 0.7);
 }
 
+/* TTS speaking indicator — bars grow from bottom */
+.animate-soundWave {
+  transform-origin: bottom;
+}
 
+/* TTS word-level highlight — uses the LexiDoc indigo palette */
+.tts-word-highlight {
+  background-color: #C7D2FE; /* indigo-200 */
+  border-radius: 3px;
+  padding: 1px 3px;
+  margin: 0 -3px;
+  transition: background-color 0.1s ease-out;
+}
 
+html.dark .tts-word-highlight,
+body.dark .tts-word-highlight {
+  background-color: rgba(99, 102, 241, 0.3); /* indigo-500 at 30% */
+}
