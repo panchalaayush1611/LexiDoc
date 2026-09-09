@@ -1,6 +1,7 @@
 {
-  "name": "pdf-chatbot-backend",
-  "version": "1.0.0",
+  "name": "lexidoc-backend",
+  "version": "1.1.0",
+  "description": "LexiDoc backend API service",
   "type": "module",
   "main": "server.js",
   "scripts": {

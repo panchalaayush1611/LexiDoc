@@ -22,4 +22,4 @@ app.get('/api/history', (req, res) => {
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
 const PORT = process.env.PORT || 4000
-app.listen(PORT, () => console.log(`PDF Chatbot backend listening on port ${PORT}`))
+app.listen(PORT, () => console.log(`LexiDoc backend listening on port ${PORT}`))
