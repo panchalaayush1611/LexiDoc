@@ -100,7 +100,7 @@ flowchart TD
 ## 📂 Project Structure
 
 ```
-PDF CHATBOT/
+LexiDoc/
 ├── public/                     # Static assets & brand identity
 │   ├── logo.png                # Transparent high-res LexiDoc brand logo
 │   ├── favicon.png             # 32x32 Tab favicon
