@@ -34,7 +34,7 @@ export function retrieveRelevantEvidence(question, docPages = []) {
   if (!docPages || docPages.length === 0) return []
   const qTokens = tokenize(question)
   if (qTokens.length === 0) {
-    return docPages.slice(0, 1).map((p) => ({ page: p.page, content: p.text, score: 1.0 }))
+    return docPages.slice(0, 1).map((p) => ({ page: p.page, content: p.text || p.content || '', score: 1.0 }))
   }
 
   const qLower = question.toLowerCase()
@@ -52,20 +52,20 @@ export function retrieveRelevantEvidence(question, docPages = []) {
   }
 
   const totalPages = docPages.length
-  const avgLen = docPages.reduce((acc, p) => acc + (p.text?.length || 0), 0) / (totalPages || 1) || 500
+  const avgLen = docPages.reduce((acc, p) => acc + ((p.text || p.content)?.length || 0), 0) / (totalPages || 1) || 500
 
   // Document Frequency (DF) map
   const dfMap = new Map()
   for (const token of qTokens) {
     let df = 0
     for (const p of docPages) {
-      if ((p.text || '').toLowerCase().includes(token)) df++
+      if (((p.text || p.content) || '').toLowerCase().includes(token)) df++
     }
     dfMap.set(token, df)
   }
 
   const scoredPages = docPages.map((p) => {
-    const text = p.text || ''
+    const text = p.text || p.content || ''
     const textLower = text.toLowerCase()
     const docLen = text.length
 
@@ -91,13 +91,15 @@ export function retrieveRelevantEvidence(question, docPages = []) {
       }
     }
 
-    // 3. Key heading / Section match (e.g., lines starting with "Aim:", "Theory & Concept:", "Procedure:", "Tools:")
+    // 3. Key heading / Section match (matches tokens against the section header prefix)
     const lines = text.split(/[\r\n]+/)
     for (const line of lines) {
       const lineLower = line.trim().toLowerCase()
-      if (/^(?:aim|objective|title|goal|tools?|datasets?|theory|concept|procedure|methodology|steps?|conclusion|observations?)\b[^:\n\r]*[:\-–—]/i.test(lineLower)) {
+      const headerMatch = lineLower.match(/^(?:aim|objective|title|goal|tools?|datasets?|theory|concept|procedure|methodology|steps?|conclusion|observations?)\b[^:\n\r]*[:\-–—]/i)
+      if (headerMatch) {
+        const headerPrefix = headerMatch[0]
         for (const token of qTokens) {
-          if (lineLower.includes(token)) {
+          if (headerPrefix.includes(token)) {
             score += 25.0
           }
         }
@@ -111,7 +113,12 @@ export function retrieveRelevantEvidence(question, docPages = []) {
       }
     }
 
-    // 4. Proximity bonus: multiple query tokens in the same sentence
+    // 4. Procedure continuity bonus: pages with numbered steps when query is about procedure/steps
+    if (isProcedure && /(?:^|\s)\d+[\.\)]\s+/i.test(text)) {
+      score += 15.0
+    }
+
+    // 5. Proximity bonus: multiple query tokens in the same sentence
     const sentences = text.split(/[.!?]+[\s\r\n]+/)
     for (const sent of sentences) {
       const sentLower = sent.toLowerCase()
@@ -121,8 +128,27 @@ export function retrieveRelevantEvidence(question, docPages = []) {
       }
     }
 
-    return { page: p.page, content: p.text, score }
+    return { page: p.page, content: text, score }
   })
+
+  // For procedure queries: check for consecutive continuation pages
+  if (isProcedure) {
+    for (let i = 0; i < scoredPages.length; i++) {
+      const sp = scoredPages[i]
+      if (sp.score >= 15.0 && /procedure|methodology|algorithm/i.test(sp.content)) {
+        const nextPage = docPages.find((p) => p.page === sp.page + 1)
+        if (nextPage) {
+          const nextText = nextPage.text || nextPage.content || ''
+          if (/(?:^|\s)\d+[\.\)]\s+/.test(nextText)) {
+            const nextScored = scoredPages.find((p) => p.page === nextPage.page)
+            if (nextScored) {
+              nextScored.score = Math.max(nextScored.score, sp.score * 0.75)
+            }
+          }
+        }
+      }
+    }
+  }
 
   scoredPages.sort((a, b) => b.score - a.score)
   const maxScore = scoredPages[0]?.score || 0
@@ -144,7 +170,7 @@ export function retrieveRelevantEvidence(question, docPages = []) {
 
   // For broader questions (procedures, summaries, comparisons):
   return scoredPages
-    .filter((p) => p.score >= Math.max(1.5, maxScore * 0.35))
+    .filter((p) => p.score >= Math.max(1.5, maxScore * 0.25))
     .slice(0, 3)
 }
 
@@ -170,19 +196,20 @@ export function synthesizeDirectAnswer(question, relevantChunks = []) {
   // 1. Aim / Objective query
   const isAimQuery = /\b(aim|objective|goal|purpose)\b/i.test(qLower)
   if (isAimQuery) {
-    for (const line of lines) {
-      const aimMatch = line.match(/^(?:aim|objective|goal)\b[^:\n\r]*[:\-–—]\s*(.+)$/i)
+    for (const chunk of relevantChunks) {
+      const text = chunk.content || ''
+      const aimMatch = text.match(/\b(?:aim|objective|goal)\b[^:\n\r]*[:\-–—]\s*([^.\n\r]+(?:\.[^.\n\r]+)?)/i)
       if (aimMatch) {
         let aimContent = aimMatch[1].trim()
         let cleanedAim = aimContent.replace(/^to\s+/i, '').replace(/\.+$/, '')
         if (cleanedAim.length > 0) {
           cleanedAim = cleanedAim.charAt(0).toLowerCase() + cleanedAim.slice(1)
         }
-        const practicalMatch = topText.match(/practical\s*(\d+)/i) || qLower.match(/practical\s*(\d+)/i)
+        const practicalMatch = text.match(/practical\s*(\d+)/i) || qLower.match(/practical\s*(\d+)/i)
         const practicalLabel = practicalMatch ? `Practical ${practicalMatch[1]}` : 'the practical'
         return {
-          answer: `The aim of ${practicalLabel} is to ${cleanedAim}. [Page ${topChunk.page}]`,
-          sources: [{ page: topChunk.page }]
+          answer: `The aim of ${practicalLabel} is to ${cleanedAim}. [Page ${chunk.page}]`,
+          sources: [{ page: chunk.page }]
         }
       }
     }
@@ -205,29 +232,71 @@ export function synthesizeDirectAnswer(question, relevantChunks = []) {
     }
   }
 
-  // 3. Procedure / Step-by-Step query
+  // 3. Procedure / Step-by-Step query (extracts ALL steps across chunks without truncation)
   const isProcedureQuery = /procedure|step|how to|algorithm|method|process|implement/i.test(qLower)
   if (isProcedureQuery) {
+    const allSteps = []
+    const contributingPages = new Set()
+
     for (const chunk of relevantChunks) {
-      const cLines = (chunk.content || '').split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean)
-      for (let i = 0; i < cLines.length; i++) {
-        if (/^(?:procedure|methodology|steps?|algorithm)\b[^:\n\r]*[:\-–—]/i.test(cLines[i])) {
-          const matchedLines = [cLines[i]]
-          for (let j = i + 1; j < Math.min(i + 8, cLines.length); j++) {
-            if (/^(?:conclusion|observations?|result|aim|tools?)\b[^:\n\r]*[:\-–—]/i.test(cLines[j])) break
-            matchedLines.push(cLines[j])
-          }
-          return {
-            answer: `### Procedure\n\n${matchedLines.join('\n\n')}\n\n[Page ${chunk.page}]`,
-            sources: [{ page: chunk.page }]
-          }
+      const text = chunk.content || ''
+      const procMatch = text.match(/\b(?:procedure|methodology|steps?|algorithm)\b[^:\n\r]*[:\-–—]?\s*([\s\S]*)/i)
+      let searchBody = procMatch ? procMatch[1] : text
+
+      // Cut off at subsequent section header
+      const endMatch = searchBody.match(/(?:^|\n|\s+)(?:conclusion|observations?|outcomes?|precautions?|viva\s+voce|theory|aim|overview|results?)\s*[:\-–—]/i)
+      if (endMatch) {
+        searchBody = searchBody.slice(0, endMatch.index).trim()
+      }
+
+      const stepRegex = /(?:^|\s)(\d+)[\.\)]\s+([\s\S]*?)(?=(?:\s+\d+[\.\)]\s+|$))/g
+      let m
+      let foundInChunk = false
+      while ((m = stepRegex.exec(searchBody)) !== null) {
+        const num = parseInt(m[1], 10)
+        let content = m[2].trim().replace(/\s+/g, ' ').replace(/\.+$/, '')
+        if (content.length > 0) {
+          allSteps.push({ num, content, page: chunk.page })
+          foundInChunk = true
         }
       }
-      const stepLines = cLines.filter((l) => /^\d+[\.\)]\s+|^step\s*\d+/i.test(l))
-      if (stepLines.length > 0) {
-        return {
-          answer: `### Procedure Steps\n\n${stepLines.join('\n')}\n\n[Page ${chunk.page}]`,
-          sources: [{ page: chunk.page }]
+      if (foundInChunk) {
+        contributingPages.add(chunk.page)
+      }
+    }
+
+    if (allSteps.length > 0) {
+      const seen = new Set()
+      const uniqueSteps = []
+      for (const s of allSteps) {
+        if (!seen.has(s.num)) {
+          seen.add(s.num)
+          uniqueSteps.push(s)
+        }
+      }
+      uniqueSteps.sort((a, b) => a.num - b.num)
+      const pagesList = [...contributingPages].map((p) => `[Page ${p}]`).join(' ')
+      return {
+        answer: `### Procedure\n\n${uniqueSteps.map((s) => `${s.num}. ${s.content}.`).join('\n')}\n\n${pagesList}`,
+        sources: [...contributingPages].map((page) => ({ page }))
+      }
+    }
+
+    // Fallback: If no numbered steps found, but a procedure section exists:
+    for (const chunk of relevantChunks) {
+      const text = chunk.content || ''
+      const procMatch = text.match(/\b(?:procedure|methodology|steps?|algorithm)\b[^:\n\r]*[:\-–—]?\s*([\s\S]*)/i)
+      if (procMatch) {
+        let searchBody = procMatch[1]
+        const endMatch = searchBody.match(/(?:^|\n|\s+)(?:conclusion|observations?|outcomes?|precautions?|viva\s+voce|theory|aim|overview|results?)\s*[:\-–—]/i)
+        if (endMatch) {
+          searchBody = searchBody.slice(0, endMatch.index).trim()
+        }
+        if (searchBody.length > 15) {
+          return {
+            answer: `### Procedure\n\n${searchBody}\n\n[Page ${chunk.page}]`,
+            sources: [{ page: chunk.page }]
+          }
         }
       }
     }
@@ -237,16 +306,17 @@ export function synthesizeDirectAnswer(question, relevantChunks = []) {
   const isExplanationQuery = /explain|what is|how does|describe|detail|elaborate|theory|concept/i.test(qLower)
   if (isExplanationQuery) {
     for (const chunk of relevantChunks) {
-      const cLines = (chunk.content || '').split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean)
-      for (let i = 0; i < cLines.length; i++) {
-        if (/^(?:theory|concept|explanation|description|overview|methodology)\b[^:\n\r]*[:\-–—]/i.test(cLines[i])) {
-          const matchedLines = [cLines[i]]
-          for (let j = i + 1; j < Math.min(i + 5, cLines.length); j++) {
-            if (/^(?:aim|objective|tools?|conclusion|observations?|procedure)\b[^:\n\r]*[:\-–—]/i.test(cLines[j])) break
-            matchedLines.push(cLines[j])
-          }
+      const text = chunk.content || ''
+      const theoryMatch = text.match(/\b(?:theory|concept|explanation|description|overview|methodology)\b[^:\n\r]*[:\-–—]?\s*([\s\S]*)/i)
+      if (theoryMatch) {
+        let searchBody = theoryMatch[1]
+        const endMatch = searchBody.match(/(?:^|\n|\s+)(?:procedure|steps?|conclusion|observations?|outcomes?|precautions?|viva\s+voce|aim|tools?|datasets?)\s*[:\-–—]/i)
+        if (endMatch) {
+          searchBody = searchBody.slice(0, endMatch.index).trim()
+        }
+        if (searchBody.length > 20) {
           return {
-            answer: `${matchedLines.join('\n\n')} [Page ${chunk.page}]`,
+            answer: `### Theory & Concept\n\n${searchBody}\n\n[Page ${chunk.page}]`,
             sources: [{ page: chunk.page }]
           }
         }

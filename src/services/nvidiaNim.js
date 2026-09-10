@@ -19,7 +19,23 @@ export async function extractPdfText(file) {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
-      const text = textContent.items.map((item) => item.str).join(' ').replace(/\s+/g, ' ').trim()
+      let lastY
+      let text = ''
+      for (const item of textContent.items) {
+        if (!item.str) continue
+        const currentY = item.transform ? item.transform[5] : undefined
+        if (lastY !== undefined && currentY !== undefined && Math.abs(currentY - lastY) > 5) {
+          text += '\n'
+        } else if (text && !text.endsWith(' ') && !text.endsWith('\n')) {
+          text += ' '
+        }
+        text += item.str
+        if (item.hasEOL) {
+          text += '\n'
+        }
+        lastY = currentY
+      }
+      text = text.trim()
       if (text) {
         pages.push({ page: i, text })
       }

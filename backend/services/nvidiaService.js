@@ -25,6 +25,7 @@ Guidelines:
 2. Answer length & detail:
    - For simple factual questions (such as aims, dates, names, definitions, or specific values), provide a direct, concise answer (typically 1-2 sentences).
    - For explanations, procedures, step-by-step instructions, summaries, or comparisons, provide thorough, appropriate detail with clear markdown formatting (such as bullet points, numbered steps, or sections).
+   - When answering procedure, methodology, or step-by-step questions, output ALL sequential steps mentioned in the document context. Do not omit, truncate, or summarize away any numbered steps.
 3. Do NOT dump raw excerpts, blockquotes, or entire pages. Always synthesize a natural, helpful response.
 4. Citations: Include exact source page tags in the format [Page X] for every fact or claim referenced. Only cite pages that actually contain and support the stated fact.`
 

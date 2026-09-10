@@ -21,11 +21,7 @@ app.get('/api/history', (req, res) => {
 
 app.get('/api/health', (req, res) => res.json({ ok: true }))
 
-// In non-serverless environments (local dev), start the HTTP server.
-// On Vercel, the exported app is mounted as a serverless function automatically.
-if (!process.env.VERCEL) {
-  const PORT = process.env.PORT || 4000
-  app.listen(PORT, () => console.log(`LexiDoc backend listening on port ${PORT}`))
-}
+const PORT = process.env.PORT || 4000
+app.listen(PORT, () => console.log(`LexiDoc backend listening on port ${PORT}`))
 
 export default app
