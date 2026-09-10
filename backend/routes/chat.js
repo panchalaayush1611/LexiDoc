@@ -27,7 +27,13 @@ router.post('/chat', async (req, res) => {
     res.json({ answer, sources })
   } catch (err) {
     console.error('Backend Chat error:', err)
-    res.status(500).json({ message: 'Something went wrong while generating the answer.' })
+    const status = err.status && Number.isInteger(err.status) && err.status >= 400 && err.status < 600 ? err.status : 500
+    res.status(status).json({
+      success: false,
+      message: err.message || 'Something went wrong while generating the answer.',
+      status,
+      detail: err.detail || null,
+    })
   }
 })
 

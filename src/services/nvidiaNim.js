@@ -39,7 +39,7 @@ export async function queryNvidiaNim(question, documentPages = []) {
   // Prepare chunks for the backend
   const chunks = documentPages.map((p) => ({
     page: p.page,
-    content: p.text,
+    content: p.content ?? p.text ?? '',
   }))
 
   // Truncate total content safely if exceeding character limits
@@ -68,7 +68,14 @@ export async function queryNvidiaNim(question, documentPages = []) {
 
   if (!response.ok) {
     const errorText = await response.text()
-    throw new Error(`Backend API error (${response.status}): ${errorText}`)
+    let errorMsg = `Backend API error (${response.status}): ${errorText}`
+    try {
+      const parsed = JSON.parse(errorText)
+      if (parsed.message) errorMsg = `NVIDIA API (${response.status}): ${parsed.message}`
+    } catch (_) {}
+    const error = new Error(errorMsg)
+    error.status = response.status
+    throw error
   }
 
   const data = await response.json()
