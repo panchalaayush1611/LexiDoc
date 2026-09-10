@@ -1,4 +1,4 @@
-const API_KEY = process.env.NVIDIA_NIM_API_KEY || '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'
+const API_KEY = process.env.NVIDIA_NIM_API_KEY
 const MODEL = process.env.NVIDIA_NIM_MODEL || 'meta/llama-3.2-11b-vision-instruct'
 const NIM_ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions'
 
